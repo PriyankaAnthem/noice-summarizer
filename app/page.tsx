@@ -22,27 +22,45 @@ export default function Home() {
   }
 
   const handleGenerateSummary = async () => {
-    if (!audioFile) return
+  if (!audioFile) return
 
-    setIsLoading(true)
+  setIsLoading(true)
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
+  try {
+    const formData = new FormData()
+    formData.append('file', audioFile)
 
-    const dummyResults = {
-      transcript:
-        "Today I want to discuss the importance of continuous learning in the modern workplace. As technology evolves at an unprecedented pace, professionals must stay updated with the latest trends and tools. Companies that invest in employee training and development see significant improvements in productivity and employee satisfaction. Furthermore, continuous learning fosters innovation and creativity within teams. Organizations should create a culture where learning is encouraged and supported through various programs and resources.",
-      summary: [
-        'Continuous learning is critical in the modern workplace due to rapid technological evolution',
-        'Professional development improves productivity and employee satisfaction',
-        'Investment in training leads to innovation and creativity in teams',
-        'Organizations should foster a learning culture with dedicated programs and resources'
-      ]
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/upload-audio`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    )
+
+    if (!res.ok) {
+      throw new Error('Upload failed')
     }
 
-    setResults(dummyResults)
+    const data = await res.json()
+
+    // 👇 for now backend returns only file info
+    // later you will replace this with transcript + summary from AI
+    const backendResults = {
+      transcript: data.transcript || "Transcript will come from backend",
+      summary: data.summary || [
+        "Summary will come from backend after processing"
+      ],
+    }
+
+    setResults(backendResults)
+  } catch (err) {
+    console.error(err)
+    alert('Something went wrong while uploading')
+  } finally {
     setIsLoading(false)
   }
+}
 
   return (
     <main className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
